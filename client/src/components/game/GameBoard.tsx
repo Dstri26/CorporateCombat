@@ -7,8 +7,7 @@ import {
   shuffleDeck, 
   dealInitialHands, 
   checkWinCondition,
-  canPurgeDepartment,
-  purgeDepartmentFromHand
+  sortHand
 } from "@/lib/game";
 import type { Card as CardType, Player } from "@shared/schema";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +19,6 @@ export default function GameBoard() {
   const [discardPile, setDiscardPile] = useState<CardType[]>([]);
   const [currentTurn, setCurrentTurn] = useState<Player>("player");
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
-  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [canDraw, setCanDraw] = useState(true);
 
   useEffect(() => {
@@ -32,13 +30,12 @@ export default function GameBoard() {
     const { playerHand, aiHand, remainingDeck } = dealInitialHands(newDeck);
 
     setDeck(remainingDeck);
-    setPlayerHand(playerHand);
-    setAiHand(aiHand);
+    setPlayerHand(sortHand(playerHand));
+    setAiHand(sortHand(aiHand));
     setDiscardPile([]);
     setCurrentTurn("player");
     setGameStatus("playing");
     setCanDraw(true);
-    setSelectedCard(null);
   };
 
   const drawCard = (source: "deck" | "discard") => {
@@ -54,11 +51,11 @@ export default function GameBoard() {
       }
 
       const [newCard, ...remainingDeck] = deck;
-      setPlayerHand(prev => [...prev, newCard]);
+      setPlayerHand(prev => sortHand([...prev, newCard]));
       setDeck(remainingDeck);
     } else if (discardPile.length > 0) {
       const topCard = discardPile[discardPile.length - 1];
-      setPlayerHand(prev => [...prev, topCard]);
+      setPlayerHand(prev => sortHand([...prev, topCard]));
       setDiscardPile(prev => prev.slice(0, -1));
     }
 
@@ -77,39 +74,31 @@ export default function GameBoard() {
       return;
     }
 
-    // If card is a 7, allow department purge
-    if (canPurgeDepartment(card)) {
-      setAiHand(prev => purgeDepartmentFromHand(prev, card.department));
-      toast({
-        title: "Department Purge!",
-        description: `Purged all ${card.department} cards from opponent's hand`
-      });
+    // Check if player has more than 7 cards
+    if (playerHand.length > 7) {
+      // Add card to discard pile
+      setDiscardPile(prev => [...prev, card]);
+      // Remove card from player's hand
+      setPlayerHand(prev => sortHand(prev.filter(c => c.id !== card.id)));
+
+      // Check win condition
+      const updatedHand = playerHand.filter(c => c.id !== card.id);
+      if (checkWinCondition(updatedHand)) {
+        setGameStatus("won");
+        toast({
+          title: "I SUBMIT MY RESIGNATION™!",
+          description: "Congratulations! You've built the perfect Career Portfolio™!"
+        });
+        return;
+      }
+
+      // Reset turn state
+      setCurrentTurn("ai");
+      setCanDraw(true);
+
+      // AI turn happens after a short delay
+      setTimeout(handleAITurn, 1000);
     }
-
-    // Add card to discard pile
-    setDiscardPile(prev => [...prev, card]);
-
-    // Remove card from player's hand
-    setPlayerHand(prev => prev.filter(c => c.id !== card.id));
-
-    // Check win condition
-    const updatedHand = playerHand.filter(c => c.id !== card.id);
-    if (checkWinCondition(updatedHand)) {
-      setGameStatus("won");
-      toast({
-        title: "Congratulations!",
-        description: "You've built the perfect Career Portfolio™!"
-      });
-      return;
-    }
-
-    // Reset turn state
-    setCurrentTurn("ai");
-    setCanDraw(true);
-    setSelectedCard(null);
-
-    // AI turn happens after a short delay
-    setTimeout(handleAITurn, 1000);
   };
 
   const handleAITurn = () => {
@@ -118,27 +107,18 @@ export default function GameBoard() {
     // AI draws a card
     if (deck.length > 0) {
       const [newCard, ...remainingDeck] = deck;
-      setAiHand(prev => [...prev, newCard]);
+      setAiHand(prev => sortHand([...prev, newCard]));
       setDeck(remainingDeck);
     }
 
     // Simple AI: just play the first card
     const cardToPlay = aiHand[0];
 
-    // If it's a 7, purge that department from player's hand
-    if (canPurgeDepartment(cardToPlay)) {
-      setPlayerHand(prev => purgeDepartmentFromHand(prev, cardToPlay.department));
-      toast({
-        title: "AI Department Purge!",
-        description: `AI purged all ${cardToPlay.department} cards from your hand`
-      });
-    }
-
     // Add to discard pile
     setDiscardPile(prev => [...prev, cardToPlay]);
 
     // Remove from AI hand
-    setAiHand(prev => prev.filter(c => c.id !== cardToPlay.id));
+    setAiHand(prev => sortHand(prev.filter(c => c.id !== cardToPlay.id)));
 
     // Check win condition
     if (checkWinCondition(aiHand)) {
@@ -159,7 +139,7 @@ export default function GameBoard() {
         {/* AI Hand (face down) */}
         <div className="mb-8">
           <Hand 
-            cards={aiHand.map(card => ({ ...card, value: 0 }))} 
+            cards={aiHand.map(card => ({ ...card, value: "?" }))} 
             isPlayerHand={false}
           />
         </div>
@@ -170,7 +150,7 @@ export default function GameBoard() {
             {gameStatus === "playing" 
               ? `Current Turn: ${currentTurn === "player" ? "Your" : "AI's"} Turn`
               : gameStatus === "won" 
-                ? "Congratulations! You've built the perfect Career Portfolio™! 🎉"
+                ? "I SUBMIT MY RESIGNATION™! 🎉"
                 : "Game Over - The AI built a better portfolio! 📉"}
           </h2>
           {currentTurn === "player" && canDraw && gameStatus === "playing" && (

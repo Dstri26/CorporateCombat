@@ -1,20 +1,47 @@
 import type { Card, Player } from "@shared/schema";
 
-export const DEPARTMENTS = ["HR", "IT", "Finance", "Marketing", "Sales", "Operations"];
+// Updated department names to match new rules
+export const DEPARTMENTS = ["DEV", "HRA", "MKT", "FIN"];
+
+// Card values in order
+const CARD_VALUES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "E", "O"];
 
 export function createDeck(): Card[] {
   const deck: Card[] = [];
 
+  // Create department cards
   DEPARTMENTS.forEach(dept => {
-    // Generate number cards (1-7) for each department
-    for (let i = 1; i <= 7; i++) {
+    CARD_VALUES.forEach(value => {
       deck.push({
-        id: `${dept}-${i}`,
+        id: `${dept}-${value}`,
         department: dept,
-        value: i
+        value,
+        type: "department"
       });
-    }
+    });
   });
+
+  // Add department-specific interns
+  DEPARTMENTS.forEach(dept => {
+    deck.push({
+      id: `${dept}-INTERN`,
+      department: dept,
+      value: "INTERN",
+      type: "intern",
+      isUniversal: false
+    });
+  });
+
+  // Add universal interns
+  for (let i = 1; i <= 2; i++) {
+    deck.push({
+      id: `UNIVERSAL-INTERN-${i}`,
+      department: "UNIVERSAL",
+      value: "INTERN",
+      type: "intern",
+      isUniversal: true
+    });
+  }
 
   return deck;
 }
@@ -40,37 +67,85 @@ export function dealInitialHands(deck: Card[]): {
   };
 }
 
-export function checkWinCondition(hand: Card[]): boolean {
-  // Check for 4+3 Career Portfolio™ winning condition
-  const departmentCounts = new Map<string, number>();
+// Helper function to get card numeric value for sorting
+function getCardValue(value: string): number {
+  if (value === "INTERN") return -1;
+  if (value === "O") return 12;
+  if (value === "E") return 11;
+  if (value === "A") return 10;
+  return parseInt(value);
+}
 
-  // Count cards by department
+// Sort cards by department and value
+export function sortHand(hand: Card[]): Card[] {
+  return [...hand].sort((a, b) => {
+    if (a.department !== b.department) {
+      return a.department.localeCompare(b.department);
+    }
+    return getCardValue(a.value) - getCardValue(b.value);
+  });
+}
+
+function isSequential(values: string[]): boolean {
+  if (values.length <= 1) return true;
+
+  // Convert card values to numeric values for comparison
+  const numericValues = values
+    .filter(v => v !== "INTERN") // Ignore interns for sequence check
+    .map(getCardValue);
+
+  // Check if sequence is ascending or descending
+  const isAscending = numericValues.every((val, i) =>
+    i === 0 || val > numericValues[i - 1]
+  );
+
+  const isDescending = numericValues.every((val, i) =>
+    i === 0 || val < numericValues[i - 1]
+  );
+
+  return isAscending || isDescending;
+}
+
+export function checkWinCondition(hand: Card[]): boolean {
+  if (hand.length !== 7) return false;
+
+  // Group cards by department
+  const departmentGroups = new Map<string, Card[]>();
   hand.forEach(card => {
-    const count = departmentCounts.get(card.department) || 0;
-    departmentCounts.set(card.department, count + 1);
+    const dept = card.type === "intern" && card.isUniversal
+      ? "UNIVERSAL"
+      : card.department;
+    if (!departmentGroups.has(dept)) {
+      departmentGroups.set(dept, []);
+    }
+    departmentGroups.get(dept)!.push(card);
   });
 
-  let hasPortfolio = false;
-  departmentCounts.forEach((count, dept) => {
-    if (count >= 4) {
-      // Check if there's another department with 3 cards
-      departmentCounts.forEach((otherCount, otherDept) => {
-        if (otherDept !== dept && otherCount >= 3) {
-          hasPortfolio = true;
-        }
-      });
+  // Find departments with 4 and 3 cards
+  let found4 = false;
+  let found3 = false;
+
+  departmentGroups.forEach((cards, dept) => {
+    // Get department cards including matching interns
+    const universalInterns = departmentGroups.get("UNIVERSAL") || [];
+    const availableInterns = [
+      ...universalInterns,
+      ...(cards.filter(c => c.type === "intern"))
+    ];
+
+    const deptCards = cards.filter(c => c.type === "department");
+
+    // Check if we can form a valid sequence with available cards
+    if (deptCards.length + availableInterns.length >= 4 && !found4) {
+      if (isSequential(deptCards.map(c => c.value))) {
+        found4 = true;
+      }
+    } else if (deptCards.length + availableInterns.length >= 3 && !found3) {
+      if (isSequential(deptCards.map(c => c.value))) {
+        found3 = true;
+      }
     }
   });
 
-  return hasPortfolio;
-}
-
-export function canPurgeDepartment(card: Card): boolean {
-  // Check if card is a "7" for Department Purge
-  return card.value === 7;
-}
-
-// Helper function to purge cards of a specific department from a hand
-export function purgeDepartmentFromHand(hand: Card[], department: string): Card[] {
-  return hand.filter(card => card.department !== department);
+  return found4 && found3;
 }
