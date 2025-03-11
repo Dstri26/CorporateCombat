@@ -68,37 +68,40 @@ export default function GameBoard() {
     // If we haven't drawn yet, can't play cards
     if (canDraw) {
       toast({
-        title: "Draw a card first",
-        description: "You must draw a card before playing one."
+        title: "Draw First",
+        description: "You must draw a card before discarding."
       });
       return;
     }
 
-    // Check if player has more than 7 cards
-    if (playerHand.length > 7) {
-      // Add card to discard pile
-      setDiscardPile(prev => [...prev, card]);
-      // Remove card from player's hand
-      setPlayerHand(prev => sortHand(prev.filter(c => c.id !== card.id)));
-
-      // Check win condition
-      const updatedHand = playerHand.filter(c => c.id !== card.id);
-      if (checkWinCondition(updatedHand)) {
-        setGameStatus("won");
-        toast({
-          title: "I SUBMIT MY RESIGNATION™!",
-          description: "Congratulations! You've built the perfect Career Portfolio™!"
-        });
-        return;
-      }
-
-      // Reset turn state
-      setCurrentTurn("ai");
-      setCanDraw(true);
-
-      // AI turn happens after a short delay
-      setTimeout(handleAITurn, 1000);
+    // Only allow discarding when player has more than 7 cards
+    if (playerHand.length <= 7) {
+      toast({
+        title: "Cannot Discard",
+        description: "You must have more than 7 cards to discard."
+      });
+      return;
     }
+
+    // Remove card from player's hand and add to discard pile
+    setPlayerHand(prev => sortHand(prev.filter(c => c.id !== card.id)));
+    setDiscardPile(prev => [...prev, card]);
+
+    // After discarding, check if we have exactly 7 cards and a valid winning hand
+    const updatedHand = playerHand.filter(c => c.id !== card.id);
+    if (updatedHand.length === 7 && checkWinCondition(updatedHand)) {
+      setGameStatus("won");
+      toast({
+        title: "I SUBMIT MY RESIGNATION™!",
+        description: "Congratulations! You've built the perfect Career Portfolio™!"
+      });
+      return;
+    }
+
+    // Continue with AI's turn
+    setCurrentTurn("ai");
+    setCanDraw(true);
+    setTimeout(handleAITurn, 1000);
   };
 
   const handleAITurn = () => {
@@ -109,25 +112,22 @@ export default function GameBoard() {
       const [newCard, ...remainingDeck] = deck;
       setAiHand(prev => sortHand([...prev, newCard]));
       setDeck(remainingDeck);
-    }
 
-    // Simple AI: just play the first card
-    const cardToPlay = aiHand[0];
+      // AI discards a card (simple strategy: discard first card)
+      const cardToDiscard = aiHand[0];
+      setDiscardPile(prev => [...prev, cardToDiscard]);
+      setAiHand(prev => sortHand(prev.filter(c => c.id !== cardToDiscard.id)));
 
-    // Add to discard pile
-    setDiscardPile(prev => [...prev, cardToPlay]);
-
-    // Remove from AI hand
-    setAiHand(prev => sortHand(prev.filter(c => c.id !== cardToPlay.id)));
-
-    // Check win condition
-    if (checkWinCondition(aiHand)) {
-      setGameStatus("lost");
-      toast({
-        title: "Game Over",
-        description: "The AI has built a better Career Portfolio™!"
-      });
-      return;
+      // Check if AI won
+      const updatedHand = aiHand.filter(c => c.id !== cardToDiscard.id);
+      if (updatedHand.length === 7 && checkWinCondition(updatedHand)) {
+        setGameStatus("lost");
+        toast({
+          title: "Game Over",
+          description: "The AI has built a better Career Portfolio™!"
+        });
+        return;
+      }
     }
 
     setCurrentTurn("player");

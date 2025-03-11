@@ -86,22 +86,30 @@ export function sortHand(hand: Card[]): Card[] {
   });
 }
 
-function isSequential(values: string[]): boolean {
-  if (values.length <= 1) return true;
+// Check if a sequence of values is valid (ascending or descending)
+function isValidSequence(cards: Card[], interns: Card[]): boolean {
+  if (cards.length === 0) return false;
 
-  // Convert card values to numeric values for comparison
-  const numericValues = values
-    .filter(v => v !== "INTERN") // Ignore interns for sequence check
-    .map(getCardValue);
+  const values = cards
+    .filter(c => c.type === "department")
+    .map(c => getCardValue(c.value));
 
-  // Check if sequence is ascending or descending
-  const isAscending = numericValues.every((val, i) =>
-    i === 0 || val > numericValues[i - 1]
-  );
+  // Sort values for checking sequences
+  const sortedValues = [...values].sort((a, b) => a - b);
 
-  const isDescending = numericValues.every((val, i) =>
-    i === 0 || val < numericValues[i - 1]
-  );
+  // Check for gaps that can be filled by interns
+  let gaps = 0;
+  for (let i = 1; i < sortedValues.length; i++) {
+    gaps += sortedValues[i] - sortedValues[i-1] - 1;
+  }
+
+  // We need enough interns to fill the gaps
+  if (gaps > interns.length) return false;
+
+  // Check if sequence is ascending
+  const isAscending = values.every((val, i) => i === 0 || val > values[i - 1]);
+  // Check if sequence is descending
+  const isDescending = values.every((val, i) => i === 0 || val < values[i - 1]);
 
   return isAscending || isDescending;
 }
@@ -111,41 +119,48 @@ export function checkWinCondition(hand: Card[]): boolean {
 
   // Group cards by department
   const departmentGroups = new Map<string, Card[]>();
+  const universalInterns: Card[] = [];
+
+  // Separate cards into departments and collect universal interns
   hand.forEach(card => {
-    const dept = card.type === "intern" && card.isUniversal
-      ? "UNIVERSAL"
-      : card.department;
-    if (!departmentGroups.has(dept)) {
-      departmentGroups.set(dept, []);
-    }
-    departmentGroups.get(dept)!.push(card);
-  });
-
-  // Find departments with 4 and 3 cards
-  let found4 = false;
-  let found3 = false;
-
-  departmentGroups.forEach((cards, dept) => {
-    // Get department cards including matching interns
-    const universalInterns = departmentGroups.get("UNIVERSAL") || [];
-    const availableInterns = [
-      ...universalInterns,
-      ...(cards.filter(c => c.type === "intern"))
-    ];
-
-    const deptCards = cards.filter(c => c.type === "department");
-
-    // Check if we can form a valid sequence with available cards
-    if (deptCards.length + availableInterns.length >= 4 && !found4) {
-      if (isSequential(deptCards.map(c => c.value))) {
-        found4 = true;
+    if (card.type === "intern" && card.isUniversal) {
+      universalInterns.push(card);
+    } else {
+      const dept = card.department;
+      if (!departmentGroups.has(dept)) {
+        departmentGroups.set(dept, []);
       }
-    } else if (deptCards.length + availableInterns.length >= 3 && !found3) {
-      if (isSequential(deptCards.map(c => c.value))) {
-        found3 = true;
-      }
+      departmentGroups.get(dept)!.push(card);
     }
   });
 
-  return found4 && found3;
+  // Try to find valid 4+3 combination
+  let found = false;
+  departmentGroups.forEach((cards, dept1) => {
+    // Check if this department can form a sequence of 4
+    if (cards.length <= 4) {
+      // Include department-specific interns and universal interns
+      const availableInterns = [
+        ...universalInterns,
+        ...cards.filter(c => c.type === "intern")
+      ];
+
+      if (cards.length + availableInterns.length >= 4 && 
+          isValidSequence(cards, availableInterns)) {
+        // If we found a valid 4-card sequence, look for a 3-card sequence
+        departmentGroups.forEach((otherCards, dept2) => {
+          if (dept1 !== dept2 && otherCards.length <= 3) {
+            // Check remaining interns for the second sequence
+            const remainingInterns = availableInterns.slice(4 - cards.length);
+            if (otherCards.length + remainingInterns.length >= 3 && 
+                isValidSequence(otherCards, remainingInterns)) {
+              found = true;
+            }
+          }
+        });
+      }
+    }
+  });
+
+  return found;
 }
