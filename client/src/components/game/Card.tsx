@@ -7,22 +7,24 @@ interface CardProps {
   isDraggable?: boolean;
 }
 
-export default function Card({ card, onClick, isDraggable }: CardProps) {
+const Card = ({ card, onClick, isDraggable }: CardProps) => {
   const departmentColors = {
-    HR: "bg-pink-100",
-    IT: "bg-blue-100",
-    Finance: "bg-green-100",
-    Marketing: "bg-purple-100",
-    Sales: "bg-yellow-100",
-    Operations: "bg-orange-100"
+    HR: "bg-pink-100 border-pink-300",
+    IT: "bg-blue-100 border-blue-300",
+    Finance: "bg-green-100 border-green-300",
+    Marketing: "bg-purple-100 border-purple-300",
+    Sales: "bg-yellow-100 border-yellow-300",
+    Operations: "bg-orange-100 border-orange-300"
   };
 
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className={`${
-        departmentColors[card.department as keyof typeof departmentColors]
-      } w-32 h-48 rounded-lg shadow-md flex flex-col justify-between p-4 cursor-pointer`}
+      className={`
+        ${departmentColors[card.department as keyof typeof departmentColors]}
+        w-32 h-48 rounded-lg shadow-md flex flex-col justify-between p-4 
+        cursor-pointer border-2 select-none
+      `}
       onClick={onClick}
       draggable={isDraggable}
     >
@@ -32,3 +34,5 @@ export default function Card({ card, onClick, isDraggable }: CardProps) {
     </motion.div>
   );
 }
+
+export default Card;
