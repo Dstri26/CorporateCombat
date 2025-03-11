@@ -1,0 +1,63 @@
+Objective:
+Develop a mobile-friendly digital version of the Corporate Combat™ card game, optimized for both Android and iOS, with online multiplayer, AI opponents, and strategic gameplay mechanics. The app should offer a seamless user experience, modern UI design, and a corporate-styled theme with a mix of office humor and strategic competition.
+
+🔹 1. Core Features & Functionality
+1️⃣ Game Modes
+✅ Single-Player Mode:
+
+Play against AI opponents with different difficulty levels.
+AI uses realistic card strategy (not random).
+✅ Multiplayer Mode:
+
+Online Multiplayer: Match with 2-6 players globally.
+Private Lobby: Invite friends via room code.
+Pass & Play: Local multiplayer on the same device.
+✅ Tutorial & Practice Mode:
+
+Step-by-step interactive tutorial.
+Solo practice mode for learning strategies.
+2️⃣ User Interface (UI) & Experience (UX)
+✅ Main Menu:
+
+Start Game, Multiplayer, Settings, Leaderboard, Tutorial
+✅ In-Game UI:
+
+Hand of 7 Cards (drag-and-drop system)
+Action Card Panel (click to activate & confirm action)
+Draw & Discard Piles (clearly visible)
+Turn Timer & Player Indicator
+✅ Minimalistic Corporate Theme:
+
+Flat UI design with clean corporate colors (blue, gray, black, white, and accent colors for each department).
+Icons & animations for card actions (smooth transitions, flipping, and shuffle effects).
+Simple, readable typography (Montserrat, Roboto, or similar).
+3️⃣ Game Mechanics & Rules Integration
+✅ Enforce Official Game Rules:
+
+Turn-based gameplay with proper sequencing.
+4+3 Career Portfolio™ validation for winning conditions.
+Department Purge Mechanism (automatically allows purging when a "7" card is drawn).
+Action Cards with animation effects & clear UI prompts.
+✅ AI Logic for Single-Player Mode:
+
+AI should make smart card choices (not random draws).
+Different AI personalities (aggressive, defensive, balanced).
+✅ Multiplayer Logic:
+
+Matchmaking with player ranking & matchmaking rating (MMR).
+Chat & emotes system (optional but enhances engagement).
+Turn timer (to prevent slow play).
+4️⃣ Animations & Sound Effects
+✅ Smooth card animations:
+
+Drawing, discarding, shuffling, hand swaps, and card reveals.
+Action card effects should be visually distinct.
+✅ Corporate-Themed Sound Effects:
+
+Subtle office background sounds (keyboard typing, meeting room murmurs, phone rings).
+Card placement sounds (light shuffle, paper flipping).
+Notification sounds for action prompts.
+✅ Victory & Defeat Animations:
+
+“I SUBMIT MY RESIGNATION™” victory screen with confetti & promotion effect.
+Failure screen (boss desk slamming papers, red termination stamp animation).
