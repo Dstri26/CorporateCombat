@@ -7,7 +7,7 @@ import {
   shuffleDeck,
   dealInitialHands,
   checkWinCondition,
-  sortHand
+  sortHand,
 } from "@/lib/game";
 import type { Card as CardType, Player } from "@shared/schema";
 import { toast } from "@/hooks/use-toast";
@@ -23,7 +23,7 @@ function GameOverDialog({
   playerHand,
   aiHand,
   winner,
-  onClose
+  onClose,
 }: {
   isOpen: boolean;
   playerHand: CardType[];
@@ -46,12 +46,16 @@ function GameOverDialog({
 
         <div className="space-y-8">
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-slate-400">AI's Final Hand:</h3>
+            <h3 className="text-lg font-medium text-slate-400">
+              AI's Final Hand:
+            </h3>
             <Hand cards={aiHand} isPlayerHand={false} />
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-slate-400">Your Final Hand:</h3>
+            <h3 className="text-lg font-medium text-slate-400">
+              Your Final Hand:
+            </h3>
             <Hand cards={playerHand} isPlayerHand={true} />
           </div>
 
@@ -72,7 +76,9 @@ export default function GameBoard() {
   const [aiHand, setAiHand] = useState<CardType[]>([]);
   const [discardPile, setDiscardPile] = useState<CardType[]>([]);
   const [currentTurn, setCurrentTurn] = useState<Player>("player");
-  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
+  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">(
+    "playing",
+  );
   const [canDraw, setCanDraw] = useState(true);
   const [showGameOver, setShowGameOver] = useState(false);
 
@@ -95,7 +101,8 @@ export default function GameBoard() {
   };
 
   const drawCard = (source: "deck" | "discard") => {
-    if (currentTurn !== "player" || !canDraw || gameStatus !== "playing") return;
+    if (currentTurn !== "player" || !canDraw || gameStatus !== "playing")
+      return;
 
     if (source === "deck") {
       if (deck.length === 0) {
@@ -107,12 +114,12 @@ export default function GameBoard() {
       }
 
       const [newCard, ...remainingDeck] = deck;
-      setPlayerHand(prev => sortHand([...prev, newCard]));
+      setPlayerHand((prev) => sortHand([...prev, newCard]));
       setDeck(remainingDeck);
     } else if (discardPile.length > 0) {
       const topCard = discardPile[discardPile.length - 1];
-      setPlayerHand(prev => sortHand([...prev, topCard]));
-      setDiscardPile(prev => prev.slice(0, -1));
+      setPlayerHand((prev) => sortHand([...prev, topCard]));
+      setDiscardPile((prev) => prev.slice(0, -1));
     }
 
     setCanDraw(false);
@@ -125,7 +132,7 @@ export default function GameBoard() {
     if (canDraw) {
       toast({
         title: "Draw First",
-        description: "You must draw a card before discarding."
+        description: "You must draw a card before discarding.",
       });
       return;
     }
@@ -134,23 +141,24 @@ export default function GameBoard() {
     if (playerHand.length <= 7) {
       toast({
         title: "Cannot Discard",
-        description: "You must have more than 7 cards to discard."
+        description: "You must have more than 7 cards to discard.",
       });
       return;
     }
 
     // Remove card from player's hand and add to discard pile
-    setPlayerHand(prev => sortHand(prev.filter(c => c.id !== card.id)));
-    setDiscardPile(prev => [...prev, card]);
+    setPlayerHand((prev) => sortHand(prev.filter((c) => c.id !== card.id)));
+    setDiscardPile((prev) => [...prev, card]);
 
     // After discarding, check if we have exactly 7 cards and a valid winning hand
-    const updatedHand = playerHand.filter(c => c.id !== card.id);
+    const updatedHand = playerHand.filter((c) => c.id !== card.id);
     if (updatedHand.length === 7 && checkWinCondition(updatedHand)) {
       setGameStatus("won");
       setShowGameOver(true);
       toast({
         title: "I SUBMIT MY RESIGNATION™!",
-        description: "Congratulations! You've built the perfect Career Portfolio™!"
+        description:
+          "Congratulations! You've built the perfect Career Portfolio™!",
       });
       return;
     }
@@ -167,22 +175,24 @@ export default function GameBoard() {
     // AI draws a card
     if (deck.length > 0) {
       const [newCard, ...remainingDeck] = deck;
-      setAiHand(prev => sortHand([...prev, newCard]));
+      setAiHand((prev) => sortHand([...prev, newCard]));
       setDeck(remainingDeck);
 
       // AI discards a card (simple strategy: discard first card)
       const cardToDiscard = aiHand[0];
-      setDiscardPile(prev => [...prev, cardToDiscard]);
-      setAiHand(prev => sortHand(prev.filter(c => c.id !== cardToDiscard.id)));
+      setDiscardPile((prev) => [...prev, cardToDiscard]);
+      setAiHand((prev) =>
+        sortHand(prev.filter((c) => c.id !== cardToDiscard.id)),
+      );
 
       // Check if AI won
-      const updatedHand = aiHand.filter(c => c.id !== cardToDiscard.id);
+      const updatedHand = aiHand.filter((c) => c.id !== cardToDiscard.id);
       if (updatedHand.length === 7 && checkWinCondition(updatedHand)) {
         setGameStatus("lost");
         setShowGameOver(true);
         toast({
           title: "Game Over",
-          description: "The AI has built a better Career Portfolio™!"
+          description: "The AI has built a better Career Portfolio™!",
         });
         return;
       }
@@ -192,16 +202,16 @@ export default function GameBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 py-8">
-      <div className="max-w-[1600px] mx-auto px-4">
+    <div className="min-h-screen w-screen bg-gradient-to-b from-slate-900 to-slate-800 py-8">
+      <div className="w-full max-w-[2000px] mx-auto px-4">
         {/* Game Status Banner */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
             {gameStatus === "playing"
               ? `${currentTurn === "player" ? "Your" : "AI's"} Turn`
               : gameStatus === "won"
-                ? "I SUBMIT MY RESIGNATION™!"
-                : "Game Over"}
+              ? "I SUBMIT MY RESIGNATION™!"
+              : "Game Over"}
           </h2>
           {currentTurn === "player" && canDraw && gameStatus === "playing" && (
             <p className="text-slate-400 text-lg">
@@ -214,9 +224,11 @@ export default function GameBoard() {
         <div className="bg-slate-800/50 rounded-2xl shadow-xl p-8 backdrop-blur-sm">
           {/* AI Hand */}
           <div className="mb-12 p-6 bg-slate-900/30 rounded-xl">
-            <h3 className="text-slate-400 mb-4 text-lg font-medium">Opponent's Hand</h3>
+            <h3 className="text-slate-400 mb-4 text-lg font-medium">
+              Opponent's Hand
+            </h3>
             <Hand
-              cards={aiHand.map(card => ({ ...card, value: "?" }))}
+              cards={aiHand.map((card) => ({ ...card, value: "?" }))}
               isPlayerHand={false}
             />
           </div>
@@ -231,9 +243,11 @@ export default function GameBoard() {
                     w-36 h-52 bg-gradient-to-br from-primary to-primary/80
                     rounded-xl shadow-lg flex items-center justify-center
                     transition-all duration-200
-                    ${currentTurn === "player" && canDraw
-                      ? "cursor-pointer hover:scale-105 hover:shadow-primary/20 hover:shadow-2xl"
-                      : "opacity-50"}
+                    ${
+                      currentTurn === "player" && canDraw
+                        ? "cursor-pointer hover:scale-105 hover:shadow-primary/20 hover:shadow-2xl"
+                        : "opacity-50"
+                    }
                   `}
                   onClick={() => drawCard("deck")}
                 >
@@ -251,11 +265,15 @@ export default function GameBoard() {
                 <div
                   className={`
                     transition-all duration-200
-                    ${currentTurn === "player" && canDraw
-                      ? "cursor-pointer hover:scale-105"
-                      : ""}
+                    ${
+                      currentTurn === "player" && canDraw
+                        ? "cursor-pointer hover:scale-105"
+                        : ""
+                    }
                   `}
-                  onClick={() => currentTurn === "player" && canDraw && drawCard("discard")}
+                  onClick={() =>
+                    currentTurn === "player" && canDraw && drawCard("discard")
+                  }
                 >
                   <Card card={discardPile[discardPile.length - 1]} />
                 </div>
@@ -267,7 +285,9 @@ export default function GameBoard() {
 
           {/* Player Hand */}
           <div className="p-6 bg-slate-900/30 rounded-xl">
-            <h3 className="text-slate-400 mb-4 text-lg font-medium">Your Hand</h3>
+            <h3 className="text-slate-400 mb-4 text-lg font-medium">
+              Your Hand
+            </h3>
             <Hand
               cards={playerHand}
               onCardClick={handleCardClick}

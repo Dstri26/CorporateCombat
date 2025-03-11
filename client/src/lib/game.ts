@@ -25,7 +25,7 @@ export function sortHand(hand: Card[]): Card[] {
   });
 }
 
-// Check if a sequence of values is valid (ascending or descending)
+// Updated win condition check with proper intern handling
 function isValidSequence(cards: Card[], availableInterns: number): boolean {
   // Get non-intern cards
   const deptCards = cards.filter(c => c.type === "department");
@@ -34,16 +34,16 @@ function isValidSequence(cards: Card[], availableInterns: number): boolean {
   const values = deptCards.map(c => getCardValue(c.value));
   const sorted = [...values].sort((a, b) => a - b);
 
-  // Check if it's a valid sequence considering available interns
-  let gaps = 0;
+  // For less than 2 cards, any sequence is valid with enough interns
+  if (values.length <= 1) return true;
+
+  // Check if sequence can be completed with interns
+  let neededInterns = 0;
   for (let i = 1; i < sorted.length; i++) {
-    gaps += sorted[i] - sorted[i-1] - 1;
+    neededInterns += Math.max(0, sorted[i] - sorted[i-1] - 1);
   }
 
-  // Need enough interns to fill gaps
-  return gaps <= availableInterns && 
-         (values.every((v, i) => i === 0 || v > values[i-1]) || // ascending
-          values.every((v, i) => i === 0 || v < values[i-1]));  // descending
+  return neededInterns <= availableInterns;
 }
 
 export function checkWinCondition(hand: Card[]): boolean {
@@ -71,26 +71,32 @@ export function checkWinCondition(hand: Card[]): boolean {
     .filter(dept => dept !== "UNIVERSAL");
   if (departments.length !== 2) return false;
 
-  // Check each department's cards
-  let dept4: string | null = null;
-  let dept3: string | null = null;
+  // For each department, check if we can make either a 4-card or 3-card sequence
+  let found4 = false;
+  let found3 = false;
 
   for (const dept of departments) {
-    const cards = departmentGroups.get(dept) || [];
-    const deptInterns = cards.filter(c => c.type === "intern").length;
-    const totalInterns = deptInterns + universalInterns.length;
-    const regularCards = cards.filter(c => c.type === "department");
+    const deptCards = departmentGroups.get(dept) || [];
+    const deptInterns = deptCards.filter(c => c.type === "intern");
+    const totalInterns = deptInterns.length + universalInterns.length;
+    const regularCards = deptCards.filter(c => c.type === "department");
 
-    // Check if this department can form a valid sequence of either 4 or 3 cards
-    if (regularCards.length + totalInterns === 4 && isValidSequence(cards, totalInterns)) {
-      dept4 = dept;
-    } else if (regularCards.length + totalInterns === 3 && isValidSequence(cards, totalInterns)) {
-      dept3 = dept;
+    // Check if we can form a valid sequence
+    if (!found4 && regularCards.length + totalInterns >= 4) {
+      if (isValidSequence(deptCards, totalInterns)) {
+        found4 = true;
+        continue;
+      }
+    }
+
+    if (!found3 && regularCards.length + totalInterns >= 3) {
+      if (isValidSequence(deptCards, totalInterns)) {
+        found3 = true;
+      }
     }
   }
 
-  // Must have exactly one department with 4 cards and one with 3 cards
-  return dept4 !== null && dept3 !== null && dept4 !== dept3;
+  return found4 && found3;
 }
 
 export function createDeck(): Card[] {
