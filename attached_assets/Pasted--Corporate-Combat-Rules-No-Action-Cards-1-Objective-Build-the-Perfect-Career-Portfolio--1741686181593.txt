@@ -1,0 +1,55 @@
+# Corporate Combat: Rules (No Action Cards)
+
+## 1️⃣ Objective: Build the Perfect Career Portfolio™
+To **win**, a player must assemble exactly **7 cards** in their hand as follows:
+- **4 cards from one department**
+- **3 cards from another department**
+
+🚨 **Rules for Valid Sets:**
+- Cards must be in **ascending or descending order** within each department.
+- No repeated departments beyond the two selected.
+- **Wild Interns** can replace missing numbers but are **locked once used**.
+
+---
+
+## 2️⃣ Game Components (Without Action Cards)
+| **Card Type**        | **Count** |
+|----------------------|----------|
+| **Department Cards** (4 Depts × 12 Cards) | 48 |
+| **Wild Intern Cards** (4 Dept + 2 Universal) | 6 |
+| **Total Cards** | **54** |
+
+---
+
+## 3️⃣ Turn Structure
+### **Step 1: Draw Phase**
+- A player **must** pick **exactly 1 card** from either:
+  - **The Draw Pile** (top card)
+  - **The Discard Pile** (top card, only if it’s a department or intern card)
+- **Skipping a turn is NOT allowed.**
+
+### **Step 2: Discard Phase**
+- A player **must** discard **exactly 1 card** after drawing.
+- **A player cannot have more than 7 cards at any time.**
+- If a player does not have a valid 4+3 Career Portfolio™, they must continue playing.
+
+### **Step 3: Win Check**
+- If a player **has a valid 4+3 set**, they **declare “I SUBMIT MY RESIGNATION™!” and win instantly.**
+
+---
+
+## 4️⃣ Special Rule: Department Purge Mechanism
+- If a player **draws or holds a "7" card**, they may **discard some or all cards** from that department.
+- This helps **streamline hands** and makes it easier to build valid sets.
+
+---
+
+## 5️⃣ Additional Rules & Clarifications
+- **Players cannot skip turns.** Every turn requires drawing and discarding.
+- **A player must always have exactly 7 cards in hand.**
+- **Wild Interns can be used to complete a sequence but get locked once placed.**
+- **If two players declare victory simultaneously, the first to declare wins.**
+
+---
+
+**Play smart. Play fast. Play to win.** 🚀

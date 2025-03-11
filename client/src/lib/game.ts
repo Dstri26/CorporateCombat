@@ -4,9 +4,9 @@ export const DEPARTMENTS = ["HR", "IT", "Finance", "Marketing", "Sales", "Operat
 
 export function createDeck(): Card[] {
   const deck: Card[] = [];
-  
+
   DEPARTMENTS.forEach(dept => {
-    // Generate number cards for each department
+    // Generate number cards (1-7) for each department
     for (let i = 1; i <= 7; i++) {
       deck.push({
         id: `${dept}-${i}`,
@@ -15,7 +15,7 @@ export function createDeck(): Card[] {
       });
     }
   });
-  
+
   return deck;
 }
 
@@ -43,12 +43,13 @@ export function dealInitialHands(deck: Card[]): {
 export function checkWinCondition(hand: Card[]): boolean {
   // Check for 4+3 Career Portfolio™ winning condition
   const departmentCounts = new Map<string, number>();
-  
+
+  // Count cards by department
   hand.forEach(card => {
     const count = departmentCounts.get(card.department) || 0;
     departmentCounts.set(card.department, count + 1);
   });
-  
+
   let hasPortfolio = false;
   departmentCounts.forEach((count, dept) => {
     if (count >= 4) {
@@ -60,11 +61,16 @@ export function checkWinCondition(hand: Card[]): boolean {
       });
     }
   });
-  
+
   return hasPortfolio;
 }
 
-export function canPurgeDepartment(hand: Card[]): boolean {
-  // Check if hand contains a "7" card for Department Purge
-  return hand.some(card => card.value === 7);
+export function canPurgeDepartment(card: Card): boolean {
+  // Check if card is a "7" for Department Purge
+  return card.value === 7;
+}
+
+// Helper function to purge cards of a specific department from a hand
+export function purgeDepartmentFromHand(hand: Card[], department: string): Card[] {
+  return hand.filter(card => card.department !== department);
 }
