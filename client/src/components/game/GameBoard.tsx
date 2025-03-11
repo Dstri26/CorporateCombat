@@ -134,72 +134,100 @@ export default function GameBoard() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="w-full max-w-4xl bg-card rounded-lg p-8 shadow-lg">
-        {/* AI Hand (face down) */}
-        <div className="mb-8">
-          <Hand 
-            cards={aiHand.map(card => ({ ...card, value: "?" }))} 
-            isPlayerHand={false}
-          />
-        </div>
-
-        {/* Game Status */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-primary">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 py-8">
+      <div className="max-w-[1600px] mx-auto px-4">
+        {/* Game Status Banner */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
             {gameStatus === "playing" 
-              ? `Current Turn: ${currentTurn === "player" ? "Your" : "AI's"} Turn`
+              ? `${currentTurn === "player" ? "Your" : "AI's"} Turn`
               : gameStatus === "won" 
-                ? "I SUBMIT MY RESIGNATION™! 🎉"
-                : "Game Over - The AI built a better portfolio! 📉"}
+                ? "I SUBMIT MY RESIGNATION™!"
+                : "Game Over"}
           </h2>
           {currentTurn === "player" && canDraw && gameStatus === "playing" && (
-            <p className="text-muted-foreground mt-2">Draw a card to start your turn</p>
+            <p className="text-slate-400 text-lg">
+              Draw a card to start your turn
+            </p>
           )}
         </div>
 
-        {/* Game Area */}
-        <div className="flex justify-center gap-8 mb-8">
-          {/* Draw Pile */}
-          <div className="relative">
-            {deck.length > 0 && (
-              <div 
-                className={`w-32 h-48 bg-primary rounded-lg shadow-md flex items-center justify-center 
-                  ${currentTurn === "player" && canDraw ? "cursor-pointer hover:opacity-90" : "opacity-50"}`}
-                onClick={() => drawCard("deck")}
-              >
-                <span className="text-white font-bold">
-                  Draw ({deck.length})
-                </span>
-              </div>
-            )}
+        {/* Game Board */}
+        <div className="bg-slate-800/50 rounded-2xl shadow-xl p-8 backdrop-blur-sm">
+          {/* AI Hand */}
+          <div className="mb-12 p-6 bg-slate-900/30 rounded-xl">
+            <h3 className="text-slate-400 mb-4 text-lg font-medium">Opponent's Hand</h3>
+            <Hand 
+              cards={aiHand.map(card => ({ ...card, value: "?" }))} 
+              isPlayerHand={false}
+            />
           </div>
 
-          {/* Discard Pile */}
-          <div className="relative">
-            {discardPile.length > 0 && (
-              <div onClick={() => currentTurn === "player" && canDraw && drawCard("discard")}>
-                <Card card={discardPile[discardPile.length - 1]} />
-              </div>
-            )}
+          {/* Game Area */}
+          <div className="flex justify-center gap-12 mb-12">
+            {/* Draw Pile */}
+            <div className="relative">
+              {deck.length > 0 && (
+                <div 
+                  className={`
+                    w-36 h-52 bg-gradient-to-br from-primary to-primary/80 
+                    rounded-xl shadow-lg flex items-center justify-center 
+                    transition-all duration-200
+                    ${currentTurn === "player" && canDraw 
+                      ? "cursor-pointer hover:scale-105 hover:shadow-primary/20 hover:shadow-2xl" 
+                      : "opacity-50"}
+                  `}
+                  onClick={() => drawCard("deck")}
+                >
+                  <div className="text-center text-white">
+                    <span className="block text-2xl font-bold mb-2">Draw</span>
+                    <span className="text-lg opacity-80">({deck.length})</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Discard Pile */}
+            <div className="relative">
+              {discardPile.length > 0 ? (
+                <div 
+                  className={`
+                    transition-all duration-200
+                    ${currentTurn === "player" && canDraw 
+                      ? "cursor-pointer hover:scale-105" 
+                      : ""}
+                  `}
+                  onClick={() => currentTurn === "player" && canDraw && drawCard("discard")}
+                >
+                  <Card card={discardPile[discardPile.length - 1]} />
+                </div>
+              ) : (
+                <div className="w-36 h-52 border-2 border-dashed border-slate-700 rounded-xl" />
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Player Hand */}
-        <Hand 
-          cards={playerHand}
-          onCardClick={handleCardClick}
-          isPlayerHand={true}
-        />
+          {/* Player Hand */}
+          <div className="p-6 bg-slate-900/30 rounded-xl">
+            <h3 className="text-slate-400 mb-4 text-lg font-medium">Your Hand</h3>
+            <Hand 
+              cards={playerHand}
+              onCardClick={handleCardClick}
+              isPlayerHand={true}
+            />
+          </div>
 
-        {/* Game Controls */}
-        <div className="flex justify-center mt-8">
-          <Button 
-            onClick={startNewGame}
-            variant="secondary"
-          >
-            New Game
-          </Button>
+          {/* Game Controls */}
+          <div className="flex justify-center mt-8">
+            <Button 
+              onClick={startNewGame}
+              variant="outline"
+              size="lg"
+              className="text-lg px-8"
+            >
+              New Game
+            </Button>
+          </div>
         </div>
       </div>
     </div>
