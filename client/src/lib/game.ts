@@ -87,41 +87,34 @@ export function sortHand(hand: Card[]): Card[] {
 }
 
 // Check if a sequence of values is valid (ascending or descending)
-function isValidSequence(cards: Card[], interns: Card[]): boolean {
+function isValidSequence(cards: Card[]): boolean {
   if (cards.length === 0) return false;
 
-  const values = cards
-    .filter(c => c.type === "department")
-    .map(c => getCardValue(c.value));
+  // Get non-intern cards
+  const regularCards = cards.filter(c => c.type === "department");
+  if (regularCards.length === 0) return false;
 
-  // Sort values for checking sequences
-  const sortedValues = [...values].sort((a, b) => a - b);
+  // Convert to numeric values
+  const values = regularCards.map(c => getCardValue(c.value));
 
-  // Check for gaps that can be filled by interns
-  let gaps = 0;
-  for (let i = 1; i < sortedValues.length; i++) {
-    gaps += sortedValues[i] - sortedValues[i-1] - 1;
-  }
+  // Check ascending
+  const ascending = values.slice().sort((a, b) => a - b);
+  const descending = values.slice().sort((a, b) => b - a);
 
-  // We need enough interns to fill the gaps
-  if (gaps > interns.length) return false;
-
-  // Check if sequence is ascending
-  const isAscending = values.every((val, i) => i === 0 || val > values[i - 1]);
-  // Check if sequence is descending
-  const isDescending = values.every((val, i) => i === 0 || val < values[i - 1]);
-
-  return isAscending || isDescending;
+  // Check if current order matches either ascending or descending
+  return values.every((val, i) => val === ascending[i]) || 
+         values.every((val, i) => val === descending[i]);
 }
 
 export function checkWinCondition(hand: Card[]): boolean {
+  // Must have exactly 7 cards
   if (hand.length !== 7) return false;
 
   // Group cards by department
   const departmentGroups = new Map<string, Card[]>();
   const universalInterns: Card[] = [];
 
-  // Separate cards into departments and collect universal interns
+  // Sort cards into department groups and collect universal interns
   hand.forEach(card => {
     if (card.type === "intern" && card.isUniversal) {
       universalInterns.push(card);
@@ -134,33 +127,28 @@ export function checkWinCondition(hand: Card[]): boolean {
     }
   });
 
-  // Try to find valid 4+3 combination
-  let found = false;
-  departmentGroups.forEach((cards, dept1) => {
-    // Check if this department can form a sequence of 4
-    if (cards.length <= 4) {
-      // Include department-specific interns and universal interns
-      const availableInterns = [
-        ...universalInterns,
-        ...cards.filter(c => c.type === "intern")
-      ];
+  // Must have exactly 2 departments (excluding UNIVERSAL)
+  const departments = Array.from(departmentGroups.keys())
+    .filter(dept => dept !== "UNIVERSAL");
+  if (departments.length !== 2) return false;
 
-      if (cards.length + availableInterns.length >= 4 && 
-          isValidSequence(cards, availableInterns)) {
-        // If we found a valid 4-card sequence, look for a 3-card sequence
-        departmentGroups.forEach((otherCards, dept2) => {
-          if (dept1 !== dept2 && otherCards.length <= 3) {
-            // Check remaining interns for the second sequence
-            const remainingInterns = availableInterns.slice(4 - cards.length);
-            if (otherCards.length + remainingInterns.length >= 3 && 
-                isValidSequence(otherCards, remainingInterns)) {
-              found = true;
-            }
-          }
-        });
-      }
+  // Check each department's cards
+  let found4 = false;
+  let found3 = false;
+
+  departments.forEach(dept => {
+    const deptCards = departmentGroups.get(dept) || [];
+    const totalCardsAvailable = deptCards.length + universalInterns.length;
+
+    // Check if we can make a 4-card sequence
+    if (!found4 && totalCardsAvailable >= 4 && isValidSequence(deptCards)) {
+      found4 = true;
+    }
+    // Check if we can make a 3-card sequence
+    else if (!found3 && totalCardsAvailable >= 3 && isValidSequence(deptCards)) {
+      found3 = true;
     }
   });
 
-  return found;
+  return found4 && found3;
 }
